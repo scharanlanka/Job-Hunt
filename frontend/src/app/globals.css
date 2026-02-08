@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #121212;
+  --surface: #1a1a1a;
+  --surface-2: #202020;
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #f4f4f1;
+  --muted: #a5a5a5;
+  --pill: rgba(255, 255, 255, 0.08);
+  --accent: #4ea1ff;
+  --accent-strong: #2e84ff;
+  --shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  --font-sans: var(--font-space-grotesk);
+  --font-mono: var(--font-plex-mono);
+  --stage-applied-bg: rgba(110, 140, 170, 0.2);
+  --stage-applied-border: rgba(110, 140, 170, 0.4);
+  --stage-applied-text: #bcd6f6;
+  --stage-scheduled-bg: rgba(78, 161, 255, 0.22);
+  --stage-scheduled-border: rgba(78, 161, 255, 0.45);
+  --stage-scheduled-text: #a9d1ff;
+  --stage-interviewed-bg: rgba(162, 120, 255, 0.2);
+  --stage-interviewed-border: rgba(162, 120, 255, 0.4);
+  --stage-interviewed-text: #d7c1ff;
+  --stage-followed-bg: rgba(78, 161, 255, 0.16);
+  --stage-followed-border: rgba(78, 161, 255, 0.32);
+  --stage-followed-text: #a5caff;
+  --stage-offered-bg: rgba(92, 205, 132, 0.2);
+  --stage-offered-border: rgba(92, 205, 132, 0.45);
+  --stage-offered-text: #b7f1c9;
+  --stage-rejected-bg: rgba(255, 114, 114, 0.18);
+  --stage-rejected-border: rgba(255, 114, 114, 0.4);
+  --stage-rejected-text: #ffc2c2;
+}
+
+:root[data-theme="light"] {
+  --bg: #f6f4f0;
+  --surface: #ffffff;
+  --surface-2: #f3f1eb;
+  --border: rgba(15, 15, 15, 0.08);
+  --text: #141414;
+  --muted: #5c5c5c;
+  --pill: rgba(15, 15, 15, 0.08);
+  --accent: #1f7ae0;
+  --accent-strong: #1666c6;
+  --shadow: 0 18px 40px rgba(25, 20, 10, 0.12);
+  --stage-applied-bg: rgba(113, 133, 152, 0.16);
+  --stage-applied-border: rgba(113, 133, 152, 0.4);
+  --stage-applied-text: #415364;
+  --stage-scheduled-bg: rgba(36, 113, 214, 0.16);
+  --stage-scheduled-border: rgba(36, 113, 214, 0.4);
+  --stage-scheduled-text: #1f4e91;
+  --stage-interviewed-bg: rgba(120, 92, 196, 0.16);
+  --stage-interviewed-border: rgba(120, 92, 196, 0.4);
+  --stage-interviewed-text: #4a357f;
+  --stage-followed-bg: rgba(58, 132, 210, 0.14);
+  --stage-followed-border: rgba(58, 132, 210, 0.35);
+  --stage-followed-text: #2b5e91;
+  --stage-offered-bg: rgba(52, 162, 97, 0.16);
+  --stage-offered-border: rgba(52, 162, 97, 0.4);
+  --stage-offered-text: #216038;
+  --stage-rejected-bg: rgba(210, 74, 74, 0.16);
+  --stage-rejected-border: rgba(210, 74, 74, 0.4);
+  --stage-rejected-text: #8a3232;
+}
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: radial-gradient(
+      circle at top,
+      rgba(78, 161, 255, 0.08),
+      transparent 55%
+    ),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+@keyframes riseFade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise {
+  animation: riseFade 0.5s ease forwards;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
