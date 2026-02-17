@@ -1,5 +1,6 @@
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status
+from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from . import crud, models, schemas, storage
@@ -35,6 +36,29 @@ def health_check():
 @app.post("/uploads/resume", status_code=status.HTTP_201_CREATED)
 def upload_resume(file: UploadFile = File(...)):
     return storage.upload_resume(file)
+
+
+@app.get("/uploads/resume/view")
+def view_resume(
+    url: str | None = Query(default=None),
+    key: str | None = Query(default=None),
+):
+    object_ref = (key or url or "").strip()
+    if not object_ref:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Provide either ?url=... or ?key=...",
+        )
+
+    stream, content_type, content_disposition = storage.get_resume_stream(object_ref)
+    return StreamingResponse(
+        stream.iter_chunks(chunk_size=1024 * 1024),
+        media_type=content_type,
+        headers={
+            "Content-Disposition": content_disposition,
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @app.get("/applications", response_model=list[schemas.Application])

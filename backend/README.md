@@ -244,15 +244,3 @@ Common Commands
 - Run locally: `uvicorn app.main:app --reload --port 8000`
 - Run tests: `pytest`
 
-Contributing
-------------
-
-1. Open an issue describing the change or bug.
-2. Create a feature branch.
-3. Make changes, add tests, and run the test suite.
-4. Open a pull request.
-
-Further help
-------------
-If you need the README to include more project-specific details (exact environment variables, database migration commands, or CI steps), tell me what system (database, migration tool, process manager) you're using and I will update this file.
-

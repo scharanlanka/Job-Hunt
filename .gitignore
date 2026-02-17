@@ -1,4 +1,4 @@
-# OS / Editor
+# OS / editor
 .DS_Store
 Thumbs.db
 .vscode/
@@ -12,19 +12,10 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# Environment and secrets
+# Environment
 .env*
-!.env.example
-secrets.*
-credentials.*
-.aws/
-*.pem
-*.key
-*.crt
-*.p12
-*.jks
 
-# Node / Frontend
+# Dependencies / builds
 node_modules/
 .pnp
 .pnp.*
@@ -33,18 +24,19 @@ node_modules/
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+
+# Next.js / frontend
 .next/
 out/
 build/
 coverage/
-.vercel/
-*.tsbuildinfo
-next-env.d.ts
 
-# Python / Backend
-__pycache__/
-*.py[oc]
-dist/
-wheels/
-*.egg-info
-.venv/
+# Misc
+*.pem
+*.tsbuildinfo
+
+# Vercel
+.vercel/
+
+
+# .env

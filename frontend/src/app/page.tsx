@@ -17,6 +17,11 @@ type DrawerState =
   | { mode: "edit"; application: Application }
   | null;
 
+type ResumePreviewState = {
+  url: string;
+  name: string;
+} | null;
+
 const stageStyles: Record<Stage, { bg: string; border: string; text: string }> =
   {
     Applied: {
@@ -307,8 +312,10 @@ function HeaderActions({
 
 function ApplicationsTable({
   onEdit,
+  onPreviewResume,
 }: {
   onEdit: (application: Application) => void;
+  onPreviewResume: (resume: { url: string; name: string }) => void;
 }) {
   const { applications, updateApplication } = useApplications();
   const openResumePreview = (application: Application) => {
@@ -316,7 +323,10 @@ function ApplicationsTable({
       window.alert("No resume URL found for this application.");
       return;
     }
-    window.open(application.resumeUsed.url, "_blank", "noopener,noreferrer");
+    onPreviewResume({
+      url: application.resumeUsed.url,
+      name: application.resumeUsed.name || "Resume",
+    });
   };
 
   return (
@@ -405,6 +415,64 @@ function ApplicationsTable({
               ))}
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ResumePreviewModal({
+  resume,
+  onClose,
+}: {
+  resume: ResumePreviewState;
+  onClose: () => void;
+}) {
+  if (!resume) {
+    return null;
+  }
+
+  const previewUrl = `/api/uploads/resume/view?url=${encodeURIComponent(
+    resume.url
+  )}#page=1&zoom=page-width&navpanes=0&scrollbar=1`;
+  const downloadUrl = `/api/uploads/resume/view?url=${encodeURIComponent(resume.url)}`;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-8 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="flex h-[88vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)]"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
+          <p className="truncate text-sm font-semibold text-[var(--text)]">
+            {resume.name}
+          </p>
+          <div className="flex items-center gap-2">
+            <a
+              href={downloadUrl}
+              download={resume.name}
+              className="rounded-full border border-[var(--border)] px-3 py-1 text-xs font-semibold text-[var(--muted)] transition hover:text-[var(--text)]"
+            >
+              Download
+            </a>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full border border-[var(--border)] px-3 py-1 text-xs font-semibold text-[var(--muted)] transition hover:text-[var(--text)]"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+        <div className="h-full overflow-hidden bg-[var(--surface-2)]">
+          <iframe
+            title={resume.name}
+            src={previewUrl}
+            className="-mt-14 h-[calc(100%+56px)] w-full border-0"
+          />
         </div>
       </div>
     </div>
@@ -982,6 +1050,7 @@ export default function Home() {
   } = useApplications();
   const [view, setView] = useState<ViewMode>("table");
   const [drawerState, setDrawerState] = useState<DrawerState>(null);
+  const [resumePreview, setResumePreview] = useState<ResumePreviewState>(null);
 
   const stats = useMemo(() => {
     const latest = applications
@@ -1042,7 +1111,10 @@ export default function Home() {
             </div>
           ) : null}
           {view === "table" ? (
-            <ApplicationsTable onEdit={(application) => setDrawerState({ mode: "edit", application })} />
+            <ApplicationsTable
+              onEdit={(application) => setDrawerState({ mode: "edit", application })}
+              onPreviewResume={(resume) => setResumePreview(resume)}
+            />
           ) : (
             <ApplicationsKanban
               onCreate={(stage) => setDrawerState({ mode: "create", stage })}
@@ -1087,6 +1159,10 @@ export default function Home() {
           }
         }}
         onUploadResume={uploadResume}
+      />
+      <ResumePreviewModal
+        resume={resumePreview}
+        onClose={() => setResumePreview(null)}
       />
     </div>
   );

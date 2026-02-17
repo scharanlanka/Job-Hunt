@@ -64,9 +64,19 @@ async function proxy(request: NextRequest, path: string[]) {
   }
 
   const responseHeaders = new Headers();
-  const backendContentType = backendResponse.headers.get("content-type");
-  if (backendContentType) {
-    responseHeaders.set("content-type", backendContentType);
+  const passthroughHeaders = [
+    "content-type",
+    "content-disposition",
+    "cache-control",
+    "accept-ranges",
+    "etag",
+    "last-modified",
+  ];
+  for (const headerName of passthroughHeaders) {
+    const value = backendResponse.headers.get(headerName);
+    if (value) {
+      responseHeaders.set(headerName, value);
+    }
   }
 
   const responseBody = await backendResponse.arrayBuffer();
