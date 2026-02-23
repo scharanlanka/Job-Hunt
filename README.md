@@ -69,6 +69,8 @@ Optional:
 
 ## Run Locally
 
+Before starting the backend for the first time, initialize PostgreSQL tables using the `psql` schema setup in `backend/README.md`.
+
 ### 1) Start backend
 
 ```bash

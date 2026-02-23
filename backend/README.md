@@ -70,14 +70,108 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-3. Set environment variables (example):
+3. Create the PostgreSQL database and tables (manual `psql` setup)
+
+Use the following commands to create the `job_hunt` database, enum types, tables, and indexes used by the backend.
+
+```bash
+psql
+CREATE DATABASE job_hunt;
+\c job_hunt
+
+DROP TABLE IF EXISTS application_events CASCADE;
+DROP TABLE IF EXISTS interview_rounds CASCADE;
+DROP TABLE IF EXISTS applications CASCADE;
+DROP TYPE IF EXISTS interview_result_enum CASCADE;
+DROP TYPE IF EXISTS applied_on_enum CASCADE;
+DROP TYPE IF EXISTS stage_enum CASCADE;
+
+CREATE TYPE stage_enum AS ENUM (
+ 'Applied',
+ 'Applied with Referral',
+ 'Interview Scheduled',
+ 'Interviewed',
+ 'Followed Up',
+ 'Offered',
+ 'Rejected'
+);
+
+CREATE TYPE applied_on_enum AS ENUM (
+ 'LinkedIn',
+ 'Indeed',
+ 'Glassdoor',
+ 'Company Portal'
+);
+
+CREATE TYPE interview_result_enum AS ENUM (
+ 'Pending',
+ 'Pass',
+ 'Fail',
+ 'Cancelled'
+);
+
+CREATE TABLE applications (
+ id TEXT PRIMARY KEY,
+ company TEXT NOT NULL,
+ role TEXT NOT NULL,
+ location TEXT,
+ stage stage_enum NOT NULL,
+ applied_date DATE NOT NULL,
+ job_url TEXT,
+ applied_on applied_on_enum,
+ referral_details TEXT,
+ job_description TEXT NOT NULL,
+ notes TEXT NOT NULL,
+ resume_name TEXT,
+ resume_url TEXT,
+ CONSTRAINT chk_referral_details_by_stage CHECK (
+   (stage = 'Applied with Referral' AND referral_details IS NOT NULL AND btrim(referral_details) <> '')
+   OR
+   (stage <> 'Applied with Referral' AND referral_details IS NULL)
+ )
+);
+
+CREATE TABLE interview_rounds (
+ id BIGSERIAL PRIMARY KEY,
+ application_id TEXT NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+ round_number INT NOT NULL CHECK (round_number > 0),
+ round_type TEXT,
+ scheduled_at TIMESTAMP,
+ completed_at TIMESTAMP,
+ result interview_result_enum,
+ notes TEXT,
+ CONSTRAINT uq_interview_rounds_app_round UNIQUE (application_id, round_number)
+);
+
+CREATE TABLE application_events (
+ id BIGSERIAL PRIMARY KEY,
+ application_id TEXT NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+ event_type TEXT NOT NULL,
+ from_stage TEXT,
+ to_stage TEXT,
+ failure_type TEXT,
+ notes TEXT,
+ event_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_applications_stage ON applications(stage);
+CREATE INDEX idx_applications_applied_date ON applications(applied_date DESC);
+CREATE INDEX idx_interview_rounds_app ON interview_rounds(application_id);
+CREATE INDEX idx_events_app ON application_events(application_id);
+CREATE INDEX idx_events_flow ON application_events(from_stage, to_stage);
+
+\dt
+\conninfo
+```
+
+4. Set environment variables (example):
 
 ```bash
 export DATABASE_URL="postgresql://user:pass@localhost:5432/dbname"
 export SECRET_KEY="your-secret-key"
 ```
 
-4. Run the app locally (FastAPI + Uvicorn example):
+5. Run the app locally (FastAPI + Uvicorn example):
 
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
@@ -243,4 +337,3 @@ Common Commands
 - Install deps: `pip install -r requirements.txt`
 - Run locally: `uvicorn app.main:app --reload --port 8000`
 - Run tests: `pytest`
-
