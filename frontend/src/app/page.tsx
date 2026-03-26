@@ -11,6 +11,11 @@ import {
 import { useTheme } from "./theme-context";
 
 type ViewMode = "table" | "kanban";
+type ListSort =
+  | "company-asc"
+  | "company-desc"
+  | "date-newest"
+  | "date-oldest";
 
 type DrawerState =
   | { mode: "create"; stage: Stage }
@@ -72,6 +77,28 @@ const stageIcon: Record<Stage, string> = {
 };
 
 function formatDate(date: string) {
+  const localDateMatch = date.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (localDateMatch) {
+    const [, year, month, day] = localDateMatch;
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const monthIndex = Number(month) - 1;
+    if (monthIndex >= 0 && monthIndex < monthNames.length) {
+      return `${monthNames[monthIndex]} ${Number(day)}, ${year}`;
+    }
+  }
   const parsed = new Date(date);
   if (Number.isNaN(parsed.getTime())) {
     return date;
@@ -85,7 +112,10 @@ function formatDate(date: string) {
 
 function todayISO() {
   const now = new Date();
-  return now.toISOString().slice(0, 10);
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 const stageOrder = STAGES.reduce(
@@ -142,6 +172,10 @@ function createId() {
     return crypto.randomUUID();
   }
   return `app-${Date.now()}`;
+}
+
+function normalizeForSearch(value: string) {
+  return value.trim().toLocaleLowerCase();
 }
 
 function StagePill({ stage }: { stage: Stage }) {
@@ -207,10 +241,18 @@ function HeaderActions({
   onCreate,
   view,
   setView,
+  companyQuery,
+  setCompanyQuery,
+  listSort,
+  setListSort,
 }: {
   onCreate: () => void;
   view: ViewMode;
   setView: (view: ViewMode) => void;
+  companyQuery: string;
+  setCompanyQuery: (value: string) => void;
+  listSort: ListSort;
+  setListSort: (value: ListSort) => void;
 }) {
   const { theme, toggleTheme } = useTheme();
 
@@ -241,54 +283,31 @@ function HeaderActions({
         </button>
       </div>
       <div className="flex items-center gap-2 text-[var(--muted)]">
-        <button
-          type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-sm transition hover:text-[var(--text)]"
-          title="Search"
+        <label className="sr-only" htmlFor="company-search">
+          Search company
+        </label>
+        <input
+          id="company-search"
+          type="search"
+          value={companyQuery}
+          onChange={(event) => setCompanyQuery(event.target.value)}
+          placeholder="Search company"
+          className="h-9 w-48 rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 text-xs text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none md:w-60"
+        />
+        <label className="sr-only" htmlFor="company-sort">
+          Sort company
+        </label>
+        <select
+          id="company-sort"
+          value={listSort}
+          onChange={(event) => setListSort(event.target.value as ListSort)}
+          className="h-9 rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 text-xs text-[var(--text)] focus:outline-none"
         >
-          <svg
-            viewBox="0 0 24 24"
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <circle cx="11" cy="11" r="7" />
-            <path d="M20 20l-3.5-3.5" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-sm transition hover:text-[var(--text)]"
-          title="Filter"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M4 6h16M7 12h10M10 18h4" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-sm transition hover:text-[var(--text)]"
-          title="Sort"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M8 7l4-4 4 4" />
-            <path d="M8 17l4 4 4-4" />
-            <path d="M12 3v18" />
-          </svg>
-        </button>
+          <option value="company-asc">Company A-Z</option>
+          <option value="company-desc">Company Z-A</option>
+          <option value="date-newest">Date newest</option>
+          <option value="date-oldest">Date oldest</option>
+        </select>
       </div>
       <button
         type="button"
@@ -311,13 +330,15 @@ function HeaderActions({
 }
 
 function ApplicationsTable({
+  applications,
   onEdit,
   onPreviewResume,
 }: {
+  applications: Application[];
   onEdit: (application: Application) => void;
   onPreviewResume: (resume: { url: string; name: string }) => void;
 }) {
-  const { applications, updateApplication } = useApplications();
+  const { updateApplication } = useApplications();
   const openResumePreview = (application: Application) => {
     if (!application.resumeUsed?.url) {
       window.alert("No resume URL found for this application.");
@@ -480,13 +501,15 @@ function ResumePreviewModal({
 }
 
 function ApplicationsKanban({
+  applications,
   onCreate,
   onEdit,
 }: {
+  applications: Application[];
   onCreate: (stage: Stage) => void;
   onEdit: (application: Application) => void;
 }) {
-  const { applications, updateApplication } = useApplications();
+  const { updateApplication } = useApplications();
 
   const grouped = useMemo(() => {
     return STAGES.reduce((acc, stage) => {
@@ -1049,6 +1072,8 @@ export default function Home() {
     uploadResume,
   } = useApplications();
   const [view, setView] = useState<ViewMode>("table");
+  const [companyQuery, setCompanyQuery] = useState("");
+  const [listSort, setListSort] = useState<ListSort>("date-newest");
   const [drawerState, setDrawerState] = useState<DrawerState>(null);
   const [resumePreview, setResumePreview] = useState<ResumePreviewState>(null);
 
@@ -1064,6 +1089,37 @@ export default function Home() {
       latest: latest ? formatDate(latest.appliedDate) : "N/A",
     };
   }, [applications]);
+
+  const visibleApplications = useMemo(() => {
+    const normalizedQuery = normalizeForSearch(companyQuery);
+    const filtered = normalizedQuery
+      ? applications.filter((application) =>
+          normalizeForSearch(application.company).includes(normalizedQuery)
+        )
+      : applications.slice();
+    filtered.sort((a, b) => {
+      if (listSort === "date-newest") {
+        const dateOrder = b.appliedDate.localeCompare(a.appliedDate);
+        if (dateOrder !== 0) {
+          return dateOrder;
+        }
+      }
+      if (listSort === "date-oldest") {
+        const dateOrder = a.appliedDate.localeCompare(b.appliedDate);
+        if (dateOrder !== 0) {
+          return dateOrder;
+        }
+      }
+      const companyOrder = a.company.localeCompare(b.company, undefined, {
+        sensitivity: "base",
+      });
+      if (listSort === "company-desc") {
+        return -companyOrder;
+      }
+      return companyOrder;
+    });
+    return filtered;
+  }, [applications, companyQuery, listSort]);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden px-6 pb-6 pt-10 md:px-10">
@@ -1095,7 +1151,15 @@ export default function Home() {
                 season.
               </p>
             </div>
-            <HeaderActions onCreate={() => setDrawerState({ mode: "create", stage: "Applied" })} view={view} setView={setView} />
+            <HeaderActions
+              onCreate={() => setDrawerState({ mode: "create", stage: "Applied" })}
+              view={view}
+              setView={setView}
+              companyQuery={companyQuery}
+              setCompanyQuery={setCompanyQuery}
+              listSort={listSort}
+              setListSort={setListSort}
+            />
           </div>
         </header>
 
@@ -1112,11 +1176,13 @@ export default function Home() {
           ) : null}
           {view === "table" ? (
             <ApplicationsTable
+              applications={visibleApplications}
               onEdit={(application) => setDrawerState({ mode: "edit", application })}
               onPreviewResume={(resume) => setResumePreview(resume)}
             />
           ) : (
             <ApplicationsKanban
+              applications={visibleApplications}
               onCreate={(stage) => setDrawerState({ mode: "create", stage })}
               onEdit={(application) => setDrawerState({ mode: "edit", application })}
             />

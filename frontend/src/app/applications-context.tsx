@@ -76,12 +76,22 @@ const PRIMARY_API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api"
 ).replace(/\/+$/, "");
 
+function normalizeAppliedDate(value: string): string {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) {
+    return value;
+  }
+  const [, year, month, day] = match;
+  return `${year}-${month}-${day}`;
+}
+
 function normalizeApplication(application: Application): Application {
   const rounds = Array.isArray(application.interviewRounds)
     ? application.interviewRounds
     : [];
   return {
     ...application,
+    appliedDate: normalizeAppliedDate(application.appliedDate),
     interviewRounds: rounds,
   };
 }
@@ -165,6 +175,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 function serializeApplication(payload: Application): Application {
   return {
     ...payload,
+    appliedDate: normalizeAppliedDate(payload.appliedDate),
     interviewRounds: (payload.interviewRounds ?? []).map((round) => ({
       roundNumber: round.roundNumber,
       roundType: round.roundType,
