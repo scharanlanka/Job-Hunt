@@ -108,26 +108,32 @@ body {
   -webkit-line-clamp: 2;
 }
 
-.jd-scrollbar {
+.jd-scrollbar,
+.apps-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: var(--accent) transparent;
+  scrollbar-gutter: stable;
 }
 
-.jd-scrollbar::-webkit-scrollbar {
+.jd-scrollbar::-webkit-scrollbar,
+.apps-scrollbar::-webkit-scrollbar {
   width: 10px;
 }
 
-.jd-scrollbar::-webkit-scrollbar-track {
+.jd-scrollbar::-webkit-scrollbar-track,
+.apps-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.jd-scrollbar::-webkit-scrollbar-thumb {
+.jd-scrollbar::-webkit-scrollbar-thumb,
+.apps-scrollbar::-webkit-scrollbar-thumb {
   background-color: color-mix(in srgb, var(--accent) 70%, transparent);
   border-radius: 9999px;
   border: 2px solid transparent;
   background-clip: content-box;
 }
 
-.jd-scrollbar::-webkit-scrollbar-thumb:hover {
+.jd-scrollbar::-webkit-scrollbar-thumb:hover,
+.apps-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: var(--accent);
 }

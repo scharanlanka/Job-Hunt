@@ -420,7 +420,7 @@ function ApplicationsTable({
               <span>Applied Date</span>
               <span>Job Description</span>
             </div>
-            <div className="flex-1 min-h-0 overflow-y-auto">
+            <div className="apps-scrollbar h-[calc(100vh-360px)] overflow-y-scroll">
               <div className="divide-y divide-[var(--border)]">
                 {applications.map((application, index) => {
                   const isSelected = selectedApplication?.id === application.id;
@@ -513,7 +513,7 @@ function ApplicationsTable({
         </div>
       </div>
       {selectedApplication ? (
-        <aside className="flex h-full max-h-[calc(100vh-220px)] min-h-[320px] flex-col overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)]">
+        <aside className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)]">
         <div className="border-b border-[var(--border)] px-5 py-4">
           <div className="flex items-center justify-between gap-3">
             <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--muted)]">
@@ -556,11 +556,13 @@ function ApplicationsTable({
             </div>
           </div>
         </div>
-        <div className="jd-scrollbar flex-1 min-h-0 overflow-y-scroll px-5 py-4">
+        <div className="px-5 py-4">
           {selectedApplication?.jobDescription?.trim() ? (
-            <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--text)]">
-              {selectedApplication.jobDescription}
-            </p>
+            <div className="jd-scrollbar h-[calc(100vh-460px)] min-h-[220px] overflow-y-scroll rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
+              <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--text)]">
+                {selectedApplication.jobDescription}
+              </p>
+            </div>
           ) : (
             <p className="text-sm text-[var(--muted)]">
               No job description saved for this application yet.
