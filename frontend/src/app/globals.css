@@ -107,3 +107,27 @@ body {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
+
+.jd-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) transparent;
+}
+
+.jd-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.jd-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.jd-scrollbar::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.jd-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--accent);
+}

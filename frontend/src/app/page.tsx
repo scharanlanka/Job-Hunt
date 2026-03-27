@@ -366,14 +366,24 @@ function HeaderActions({
 
 function ApplicationsTable({
   applications,
+  selectedApplicationId,
+  onSelectApplication,
+  onClosePreview,
   onEdit,
   onPreviewResume,
 }: {
   applications: Application[];
+  selectedApplicationId: string | null;
+  onSelectApplication: (applicationId: string) => void;
+  onClosePreview: () => void;
   onEdit: (application: Application) => void;
   onPreviewResume: (resume: { url: string; name: string }) => void;
 }) {
   const { updateApplication } = useApplications();
+  const selectedApplication =
+    applications.find((application) => application.id === selectedApplicationId) ??
+    null;
+
   const openResumePreview = (application: Application) => {
     if (!application.resumeUsed?.url) {
       window.alert("No resume URL found for this application.");
@@ -386,93 +396,179 @@ function ApplicationsTable({
   };
 
   return (
-    <div className="flex h-full flex-col rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)]">
-      <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4 text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
-        <span>All applications</span>
-        <span className="font-mono text-[11px]">{applications.length} total</span>
-      </div>
-      <div className="flex-1 min-h-0 overflow-x-auto">
-        <div className="flex h-full min-w-[980px] flex-col">
-          <div className="grid grid-cols-[200px_180px_140px_220px_160px_160px_140px_1fr] gap-4 border-b border-[var(--border)] px-6 py-3 text-[11px] uppercase tracking-[0.2em] text-[var(--muted)]">
-            <span>Company</span>
-            <span>Stage</span>
-            <span>Applied On</span>
-            <span>Role</span>
-            <span>Location</span>
-            <span>Resume</span>
-            <span>Applied Date</span>
-            <span>Job Description</span>
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <div className="divide-y divide-[var(--border)]">
-              {applications.map((application, index) => (
-                <div
-                  key={application.id}
-                  className="group grid cursor-pointer grid-cols-[200px_180px_140px_220px_160px_160px_140px_1fr] gap-4 px-6 py-4 text-sm transition hover:bg-[var(--surface-2)] animate-rise"
-                  style={{ animationDelay: `${index * 40}ms` }}
-                  onClick={() => onEdit(application)}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-xs font-semibold text-[var(--muted)]">
-                      {application.company.slice(0, 2).toUpperCase()}
-                    </span>
-                    <div className="font-semibold text-[var(--text)]">
-                      {application.company}
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <StageSelect
-                      value={application.stage}
-                      onChange={(stage) => {
-                        void updateApplication(applyStageChange(application, stage));
-                      }}
-                    />
-                  </div>
-                  <div className="text-[var(--muted)]">
-                    {application.appliedOn ?? "N/A"}
-                  </div>
-                  <div className="text-[var(--text)]">{application.role}</div>
-                  <div className="text-[var(--muted)]">
-                    {application.location || "N/A"}
-                  </div>
-                  <div>
-                    {application.resumeUsed?.name ? (
-                      <button
-                        type="button"
-                        title="Preview resume"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          openResumePreview(application);
-                        }}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--muted)] transition hover:text-[var(--text)]"
-                      >
-                        <svg
-                          viewBox="0 0 24 24"
-                          className="h-4 w-4"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
+    <div
+      className={`grid h-full min-h-0 gap-4 overflow-hidden ${
+        selectedApplication
+          ? "xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,1fr)]"
+          : "grid-cols-1"
+      }`}
+    >
+      <div className="flex h-full flex-col rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)]">
+        <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4 text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
+          <span>All applications</span>
+          <span className="font-mono text-[11px]">{applications.length} total</span>
+        </div>
+        <div className="flex-1 min-h-0 overflow-x-auto">
+          <div className="flex h-full min-w-[1080px] flex-col">
+            <div className="grid grid-cols-[220px_180px_140px_220px_160px_120px_140px_1fr] gap-4 border-b border-[var(--border)] px-6 py-3 text-[11px] uppercase tracking-[0.2em] text-[var(--muted)]">
+              <span>Company</span>
+              <span>Stage</span>
+              <span>Applied On</span>
+              <span>Role</span>
+              <span>Location</span>
+              <span>Resume</span>
+              <span>Applied Date</span>
+              <span>Job Description</span>
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <div className="divide-y divide-[var(--border)]">
+                {applications.map((application, index) => {
+                  const isSelected = selectedApplication?.id === application.id;
+                  return (
+                    <div
+                      key={application.id}
+                      className={`group grid cursor-pointer grid-cols-[220px_180px_140px_220px_160px_120px_140px_1fr] gap-4 px-6 py-4 text-sm transition animate-rise ${
+                        isSelected
+                          ? "bg-[var(--surface-2)] ring-1 ring-inset ring-[var(--accent)]"
+                          : "hover:bg-[var(--surface-2)]"
+                      }`}
+                      style={{ animationDelay: `${index * 40}ms` }}
+                      onClick={() => onEdit(application)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-xs font-semibold text-[var(--muted)]">
+                          {application.company.slice(0, 2).toUpperCase()}
+                        </span>
+                        <div className="font-semibold text-[var(--text)]">
+                          {application.company}
+                        </div>
+                      </div>
+                      <div className="flex items-center">
+                        <StageSelect
+                          value={application.stage}
+                          onChange={(stage) => {
+                            void updateApplication(applyStageChange(application, stage));
+                          }}
+                        />
+                      </div>
+                      <div className="text-[var(--muted)]">
+                        {application.appliedOn ?? "N/A"}
+                      </div>
+                      <div className="text-[var(--text)]">{application.role}</div>
+                      <div className="text-[var(--muted)]">
+                        {application.location || "N/A"}
+                      </div>
+                      <div>
+                        {application.resumeUsed?.name ? (
+                          <button
+                            type="button"
+                            title="Preview resume"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              openResumePreview(application);
+                            }}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--muted)] transition hover:text-[var(--text)]"
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              className="h-4 w-4"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                              <circle cx="12" cy="12" r="3" />
+                            </svg>
+                          </button>
+                        ) : (
+                          <span className="text-[var(--muted)]">N/A</span>
+                        )}
+                      </div>
+                      <div className="text-[var(--muted)]">
+                        {formatDate(application.appliedDate)}
+                      </div>
+                      <div className="min-w-0">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onSelectApplication(application.id);
+                          }}
+                          className="line-clamp-2 text-left text-[var(--muted)] transition hover:text-[var(--text)]"
+                          title={
+                            application.jobDescription?.trim()
+                              ? "Open JD preview"
+                              : "No JD text saved"
+                          }
                         >
-                          <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
-                          <circle cx="12" cy="12" r="3" />
-                        </svg>
-                      </button>
-                    ) : (
-                      <span className="text-[var(--muted)]">N/A</span>
-                    )}
-                  </div>
-                  <div className="text-[var(--muted)]">
-                    {formatDate(application.appliedDate)}
-                  </div>
-                  <div className="line-clamp-2 text-[var(--muted)]">
-                    {application.jobDescription}
-                  </div>
-                </div>
-              ))}
+                          {application.jobDescription?.trim() || "No JD saved"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
       </div>
+      {selectedApplication ? (
+        <aside className="flex h-full max-h-[calc(100vh-220px)] min-h-[320px] flex-col overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)]">
+        <div className="border-b border-[var(--border)] px-5 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--muted)]">
+              Job description preview
+            </p>
+            <button
+              type="button"
+              onClick={onClosePreview}
+              className="rounded-full border border-[var(--border)] px-3 py-1 text-xs font-semibold text-[var(--muted)] transition hover:text-[var(--text)]"
+            >
+              Close
+            </button>
+          </div>
+          <div className="mt-3 space-y-2">
+            <h3 className="text-xl font-semibold text-[var(--text)]">
+              {selectedApplication.company} - {selectedApplication.role}
+            </h3>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--muted)]">
+              <StagePill stage={selectedApplication.stage} />
+              <span>{selectedApplication.location || "Location not set"}</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => onEdit(selectedApplication)}
+                className="rounded-full border border-[var(--border)] px-3 py-1 text-xs font-semibold text-[var(--muted)] transition hover:text-[var(--text)]"
+              >
+                Edit details
+              </button>
+              {selectedApplication.jobUrl ? (
+                <a
+                  href={selectedApplication.jobUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full border border-[var(--border)] px-3 py-1 text-xs font-semibold text-[var(--muted)] transition hover:text-[var(--text)]"
+                >
+                  Open posting
+                </a>
+              ) : null}
+            </div>
+          </div>
+        </div>
+        <div className="jd-scrollbar flex-1 min-h-0 overflow-y-scroll px-5 py-4">
+          {selectedApplication?.jobDescription?.trim() ? (
+            <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--text)]">
+              {selectedApplication.jobDescription}
+            </p>
+          ) : (
+            <p className="text-sm text-[var(--muted)]">
+              No job description saved for this application yet.
+            </p>
+          )}
+        </div>
+        </aside>
+      ) : null}
     </div>
   );
 }
@@ -1115,6 +1211,9 @@ export default function Home() {
   const [listSort, setListSort] = useState<ListSort>("date-newest");
   const [drawerState, setDrawerState] = useState<DrawerState>(null);
   const [resumePreview, setResumePreview] = useState<ResumePreviewState>(null);
+  const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(
+    null
+  );
 
   const stats = useMemo(() => {
     const latest = applications
@@ -1159,6 +1258,16 @@ export default function Home() {
     });
     return filtered;
   }, [applications, companyQuery, listSort]);
+
+  const resolvedSelectedApplicationId = useMemo(() => {
+    if (!selectedApplicationId) {
+      return null;
+    }
+    const selectedStillVisible = visibleApplications.some(
+      (application) => application.id === selectedApplicationId
+    );
+    return selectedStillVisible ? selectedApplicationId : null;
+  }, [visibleApplications, selectedApplicationId]);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden px-6 pb-6 pt-10 md:px-10">
@@ -1216,6 +1325,9 @@ export default function Home() {
           {view === "table" ? (
             <ApplicationsTable
               applications={visibleApplications}
+              selectedApplicationId={resolvedSelectedApplicationId}
+              onSelectApplication={setSelectedApplicationId}
+              onClosePreview={() => setSelectedApplicationId(null)}
               onEdit={(application) => setDrawerState({ mode: "edit", application })}
               onPreviewResume={(resume) => setResumePreview(resume)}
             />
