@@ -1,11 +1,40 @@
 from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from . import crud, models, schemas, storage
 from .database import Base, SessionLocal, engine
 
+
+def sync_applied_on_enum_values() -> None:
+    with engine.connect() as connection:
+        if connection.dialect.name != "postgresql":
+            return
+        autocommit_connection = connection.execution_options(
+            isolation_level="AUTOCOMMIT"
+        )
+        enum_exists = autocommit_connection.execute(
+            text("SELECT 1 FROM pg_type WHERE typname = 'applied_on_enum'")
+        ).scalar()
+        if not enum_exists:
+            return
+        for value in (
+            "LinkedIn",
+            "Greenhouse",
+            "Ashby",
+            "Lever",
+            "Indeed",
+            "Glassdoor",
+            "Company Portal",
+        ):
+            autocommit_connection.execute(
+                text(f"ALTER TYPE applied_on_enum ADD VALUE IF NOT EXISTS '{value}'")
+            )
+
+
+sync_applied_on_enum_values()
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Job Hunt API")

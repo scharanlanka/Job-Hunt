@@ -39,7 +39,14 @@ export type Application = {
   stage: Stage;
   appliedDate: string;
   jobUrl?: string;
-  appliedOn?: "LinkedIn" | "Indeed" | "Glassdoor" | "Company Portal";
+  appliedOn?:
+    | "LinkedIn"
+    | "Greenhouse"
+    | "Ashby"
+    | "Lever"
+    | "Indeed"
+    | "Glassdoor"
+    | "Company Portal";
   referralDetails?: string;
   interviewRounds: InterviewRound[];
   jobDescription: string;

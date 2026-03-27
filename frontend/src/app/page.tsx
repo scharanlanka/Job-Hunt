@@ -27,6 +27,16 @@ type ResumePreviewState = {
   name: string;
 } | null;
 
+const APPLIED_ON_OPTIONS = [
+  "LinkedIn",
+  "Greenhouse",
+  "Ashby",
+  "Lever",
+  "Indeed",
+  "Glassdoor",
+  "Company Portal",
+] as const;
+
 const stageStyles: Record<Stage, { bg: string; border: string; text: string }> =
   {
     Applied: {
@@ -176,6 +186,31 @@ function createId() {
 
 function normalizeForSearch(value: string) {
   return value.trim().toLocaleLowerCase();
+}
+
+function detectAppliedOnFromUrl(
+  url: string
+): (typeof APPLIED_ON_OPTIONS)[number] {
+  const normalized = url.toLocaleLowerCase();
+  if (/linkedin\.com/.test(normalized)) {
+    return "LinkedIn";
+  }
+  if (/greenhouse\.io/.test(normalized)) {
+    return "Greenhouse";
+  }
+  if (/ashbyhq\.com|ashby\.jobs/.test(normalized)) {
+    return "Ashby";
+  }
+  if (/lever\.co/.test(normalized)) {
+    return "Lever";
+  }
+  if (/indeed\./.test(normalized)) {
+    return "Indeed";
+  }
+  if (/glassdoor\./.test(normalized)) {
+    return "Glassdoor";
+  }
+  return "Company Portal";
 }
 
 function StagePill({ stage }: { stage: Stage }) {
@@ -815,7 +850,13 @@ function ApplicationDrawer({
             <input
               type="url"
               value={form.jobUrl ?? ""}
-              onChange={(event) => updateForm("jobUrl", event.target.value)}
+              onChange={(event) => {
+                const nextUrl = event.target.value;
+                updateForm("jobUrl", nextUrl);
+                if (nextUrl.trim()) {
+                  updateForm("appliedOn", detectAppliedOnFromUrl(nextUrl));
+                }
+              }}
               className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm text-[var(--text)] focus:outline-none"
               placeholder="https://..."
             />
@@ -825,24 +866,22 @@ function ApplicationDrawer({
               Applied On
             </legend>
             <div className="grid gap-2 sm:grid-cols-2">
-              {(["LinkedIn", "Indeed", "Glassdoor", "Company Portal"] as const).map(
-                (option) => (
-                  <label
-                    key={option}
-                    className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-xs font-medium text-[var(--text)]"
-                  >
-                    <input
-                      type="radio"
-                      name="appliedOn"
-                      value={option}
-                      checked={(form.appliedOn ?? "LinkedIn") === option}
-                      onChange={() => updateForm("appliedOn", option)}
-                      className="h-3 w-3 accent-[var(--accent)]"
-                    />
-                    {option}
-                  </label>
-                )
-              )}
+              {APPLIED_ON_OPTIONS.map((option) => (
+                <label
+                  key={option}
+                  className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-xs font-medium text-[var(--text)]"
+                >
+                  <input
+                    type="radio"
+                    name="appliedOn"
+                    value={option}
+                    checked={(form.appliedOn ?? "LinkedIn") === option}
+                    onChange={() => updateForm("appliedOn", option)}
+                    className="h-3 w-3 accent-[var(--accent)]"
+                  />
+                  {option}
+                </label>
+              ))}
             </div>
           </fieldset>
           {showReferralDetails ? (

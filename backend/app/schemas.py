@@ -13,7 +13,15 @@ Stage = Literal[
     "Rejected",
 ]
 
-AppliedOn = Literal["LinkedIn", "Indeed", "Glassdoor", "Company Portal"]
+AppliedOn = Literal[
+    "LinkedIn",
+    "Greenhouse",
+    "Ashby",
+    "Lever",
+    "Indeed",
+    "Glassdoor",
+    "Company Portal",
+]
 InterviewResult = Literal["Pending", "Pass", "Fail", "Cancelled"]
 
 
