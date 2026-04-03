@@ -1,11 +1,22 @@
 import os
+import re
+import unicodedata
 from typing import Optional
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 from uuid import uuid4
 
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 from fastapi import HTTPException, UploadFile, status
+
+
+def _build_content_disposition(filename: str) -> str:
+    raw = (filename or "").strip() or "resume"
+    ascii_name = unicodedata.normalize("NFKD", raw).encode("ascii", "ignore").decode()
+    ascii_name = re.sub(r"[^\w.\- ]", "_", ascii_name).strip() or "resume"
+    ascii_name = ascii_name.replace("\\", "_").replace('"', "_")
+    utf8_name = quote(raw, safe="!#$&+-.^_`|~")
+    return f'inline; filename="{ascii_name}"; filename*=UTF-8\'\'{utf8_name}'
 
 
 def _get_s3_client():
@@ -133,9 +144,7 @@ def get_resume_stream(object_ref: str):
         ) from exc
 
     content_type = s3_object.get("ContentType") or "application/octet-stream"
-    content_disposition = s3_object.get("ContentDisposition")
-    if not content_disposition:
-        filename = key.rsplit("/", 1)[-1] or "resume"
-        content_disposition = f'inline; filename="{filename}"'
+    filename = key.rsplit("/", 1)[-1] or "resume"
+    content_disposition = _build_content_disposition(filename)
 
     return s3_object["Body"], content_type, content_disposition
