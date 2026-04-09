@@ -94,15 +94,40 @@ def _apply_resume(
 def _sync_interview_rounds(
     db_application: models.Application, rounds: list[schemas.InterviewRoundBase]
 ) -> None:
-    db_application.interviewRounds.clear()
-    for round_item in sorted(rounds, key=lambda item: item.roundNumber):
+    existing_by_number = {
+        round_item.roundNumber: round_item
+        for round_item in db_application.interviewRounds
+    }
+    incoming_by_number = {
+        round_item.roundNumber: round_item
+        for round_item in rounds
+    }
+
+    # Remove rounds that are no longer present.
+    db_application.interviewRounds[:] = [
+        round_item
+        for round_item in db_application.interviewRounds
+        if round_item.roundNumber in incoming_by_number
+    ]
+
+    for round_number in sorted(incoming_by_number):
+        incoming = incoming_by_number[round_number]
+        existing = existing_by_number.get(round_number)
+        if existing:
+            existing.roundType = incoming.roundType
+            existing.scheduledAt = incoming.scheduledAt
+            existing.completedAt = incoming.completedAt
+            existing.result = incoming.result
+            existing.notes = incoming.notes
+            continue
+
         db_application.interviewRounds.append(
             models.InterviewRound(
-                roundNumber=round_item.roundNumber,
-                roundType=round_item.roundType,
-                scheduledAt=round_item.scheduledAt,
-                completedAt=round_item.completedAt,
-                result=round_item.result,
-                notes=round_item.notes,
+                roundNumber=incoming.roundNumber,
+                roundType=incoming.roundType,
+                scheduledAt=incoming.scheduledAt,
+                completedAt=incoming.completedAt,
+                result=incoming.result,
+                notes=incoming.notes,
             )
         )
