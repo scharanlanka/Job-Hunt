@@ -25,6 +25,7 @@ def sync_applied_on_enum_values() -> None:
             "Greenhouse",
             "Ashby",
             "Lever",
+            "Workday",
             "Indeed",
             "Glassdoor",
             "Company Portal",

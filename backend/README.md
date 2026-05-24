@@ -290,7 +290,7 @@ Schemas (summary)
 - `stage` (string) — one of: `Applied`, `Applied with Referral`, `Interview Scheduled`, `Interviewed`, `Followed Up`, `Offered`, `Rejected`
 - `appliedDate` (date) — ISO date string `YYYY-MM-DD`
 - `jobUrl` (string | optional)
-- `appliedOn` (enum | optional) — one of: `LinkedIn`, `Indeed`, `Glassdoor`, `Company Portal`
+- `appliedOn` (enum | optional) — one of: `LinkedIn`, `Greenhouse`, `Ashby`, `Lever`, `Workday`, `Indeed`, `Glassdoor`, `Company Portal`
 - `referralDetails` (string | optional) — required when `stage` is `Applied with Referral`
 - `interviewRounds` (array) — list of interview round objects (see below)
 - `jobDescription` (string)

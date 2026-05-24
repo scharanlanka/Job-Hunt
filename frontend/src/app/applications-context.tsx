@@ -44,6 +44,7 @@ export type Application = {
     | "Greenhouse"
     | "Ashby"
     | "Lever"
+    | "Workday"
     | "Indeed"
     | "Glassdoor"
     | "Company Portal";

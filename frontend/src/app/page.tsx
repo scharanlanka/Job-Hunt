@@ -32,6 +32,7 @@ const APPLIED_ON_OPTIONS = [
   "Greenhouse",
   "Ashby",
   "Lever",
+  "Workday",
   "Indeed",
   "Glassdoor",
   "Company Portal",
@@ -203,6 +204,9 @@ function detectAppliedOnFromUrl(
   }
   if (/lever\.co/.test(normalized)) {
     return "Lever";
+  }
+  if (/myworkdayjobs\.com|workday/.test(normalized)) {
+    return "Workday";
   }
   if (/indeed\./.test(normalized)) {
     return "Indeed";
