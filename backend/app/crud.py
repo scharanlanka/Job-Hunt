@@ -42,6 +42,7 @@ def update_application(
 ) -> models.Application:
     previous_stage = db_application.stage
     data = payload.model_dump(exclude={"resumeUsed", "interviewRounds"})
+    _normalize_application_fields(data)
     for key, value in data.items():
         setattr(db_application, key, value)
     _apply_resume(db_application, payload.resumeUsed)
@@ -89,6 +90,11 @@ def _apply_resume(
     else:
         db_application.resumeName = None
         db_application.resumeUrl = None
+
+
+def _normalize_application_fields(data: dict) -> None:
+    if data.get("stage") != "Applied with Referral":
+        data["referralDetails"] = None
 
 
 def _sync_interview_rounds(

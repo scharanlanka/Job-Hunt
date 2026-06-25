@@ -66,12 +66,14 @@ class ApplicationBase(BaseModel):
         detected_applied_on = _detect_applied_on_from_job_url(self.jobUrl)
         if detected_applied_on:
             self.appliedOn = detected_applied_on
+        if self.referralDetails is not None:
+            self.referralDetails = self.referralDetails.strip() or None
         if self.stage == "Applied with Referral":
-            if not self.referralDetails or not self.referralDetails.strip():
+            if not self.referralDetails:
                 raise ValueError("referralDetails is required for Applied with Referral")
+        else:
+            self.referralDetails = None
         if self.stage == "Applied":
-            if self.referralDetails:
-                raise ValueError("referralDetails must be empty for Applied stage")
             if self.interviewRounds:
                 raise ValueError("interviewRounds must be empty before interview stages")
         if self.stage == "Applied with Referral" and self.interviewRounds:
